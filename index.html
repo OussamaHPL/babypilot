@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BabyPilot - Mobile App</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Import de Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- 1. ÉCRAN DE DÉMARRAGE -->
+    <div class="splash-container" id="splashScreen">
+        <div class="spinner-wrapper">
+            <div class="neon-spinner"></div>
+            <div class="logo">
+                <img src="logo.png" alt="Logo BabyPilot">
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ÉCRAN BLUETOOTH -->
+    <div id="bluetooth-screen" class="hidden fullscreen-overlay">
+        <div class="glass-box">
+            <svg id="bt-icon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#00f3ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #00f3ff); margin-bottom: 20px;">
+                <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+            </svg>
+            <h2 style="color: white; margin-bottom: 30px; letter-spacing: 2px; font-size: 1.2rem;">BABYPILOT DETECTED</h2>
+            <button id="btn-connect-bt" class="neon-button" style="font-size: 1rem; padding: 15px 30px;">CONNECT BLUETOOTH</button>
+            <p id="bt-status-text" style="margin-top: 20px; color: #00f3ff; font-weight: bold; font-size: 0.8rem; height: 20px;"></p>
+        </div>
+    </div>
+
+    <!-- 3. INTERFACE PRINCIPALE MOBILE -->
+    <div id="main-app" class="hidden">
+        
+        <!-- Conteneur de la Poussette 3D -->
+        <div id="canvas-container"></div>
+        
+        <!-- Dashboard Mobile (Scrollable en bas) -->
+        <div class="ui-layout">
+            
+            <!-- Panneau 1 : Statut Système -->
+            <div class="side-panel">
+                <div class="panel-header">STATUT SYSTÈME</div>
+                <div class="panel-content">
+                    <p>UTILISATEUR: <span>OUSSAMA</span></p>
+                    
+                    <!-- Batterie -->
+                    <div class="battery-label">
+                        <svg class="battery-icon" width="28" height="14" viewBox="0 0 28 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="1" y="1" width="23" height="12" rx="2" stroke="currentColor" stroke-width="2"/>
+                            <path d="M26 4V10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <rect class="battery-icon-fill" x="3" y="3" width="19" height="8" rx="1" fill="currentColor"/>
+                        </svg>
+                        <p>ÉTAT BATTERIE: <span id="battery-level">85%</span></p>
+                    </div>
+                    <div class="stat-bar battery-container">
+                        <div class="fill battery-fill" style="width: 85%;"></div>
+                    </div>
+                    
+                    <!-- Lock -->
+                    <button id="btn-lock" class="neon-button" style="margin-top: 25px;">
+                        <svg class="lock-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span id="lock-btn-text">LOCK WHEELS</span>
+                    </button>
+                    <p id="lock-status" style="margin-top: 10px; font-size: 0.8rem; color: #00f3ff; font-weight: bold; text-align: center;">The Wheels are unlocked</p>
+
+                    <!-- Météo -->
+                    <button id="btn-weather" class="neon-button" style="margin-top: 15px;">
+                        <svg class="weather-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <span id="weather-btn-text">VÉRIFIER MÉTÉO</span>
+                    </button>
+                    <div id="weather-display" class="weather-box hidden">
+                        <p id="weather-location" style="font-size: 0.75rem; color: rgba(255,255,255,0.7);"></p>
+                        <p id="weather-temp" style="font-size: 1.5rem; font-weight: bold; color: #00f3ff; margin: 5px 0;"></p>
+                        <p id="weather-desc" style="font-size: 0.9rem; color: #ffcc00;"></p>
+                    </div>
+
+                    <!-- Alarme -->
+                    <button id="btn-alarm" class="neon-button alarm-btn-style" style="margin-top: 15px;">
+                        <svg class="alarm-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span id="alarm-btn-text">ACTIVER L'ALARME</span>
+                    </button>
+                    <div id="sound-bar-container" class="hidden" style="margin-top: 15px;">
+                        <p style="font-size: 0.7rem; color: #ff003c; margin-bottom: 5px; text-align: center; letter-spacing: 1px;">ALERTE SONORE ACTIVE</p>
+                        <div class="stat-bar"><div id="sound-bar-fill" class="fill alarm-pulse" style="width: 0%;"></div></div>
+                    </div>
+                    <audio id="alarm-sound" loop><source src="alarm.mp3" type="audio/mpeg"></audio>
+
+                </div>
+            </div>
+
+            <!-- Panneau 2 : Localisation GPS (Google Maps) -->
+            <div class="side-panel">
+                <div class="panel-header">LOCALISATION GPS</div>
+                <div class="panel-content" style="display: flex; flex-direction: column;">
+                    
+                    <button id="btn-gps" class="neon-button" style="margin-bottom: 15px;">
+                        <svg class="gps-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="10" r="3"></circle><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"></path>
+                        </svg>
+                        <span id="gps-text">LOCALISER LA POUSSETTE</span>
+                    </button>
+
+                    <p id="gps-status-text" style="font-size: 0.8rem; color: #00ff37; margin-bottom: 10px; display: none; text-align: center;">📍 Signal : Résidence Universiapolis, Agadir</p>
+                    
+                    <div id="map-container" class="map-container" style="display: none;">
+                        <iframe src="https://maps.google.com/maps?q=R%C3%A9sidence+Universiapolis,+Agadir,+Maroc&hl=fr&z=16&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        <div class="scan-overlay"></div>
+                    </div>
+                    
+                    <div id="map-placeholder" class="map-placeholder">
+                        <p id="placeholder-text">Appuyez sur "LOCALISER" pour afficher la position en temps réel.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- Fin ui-layout -->
+    </div> <!-- Fin main-app -->
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
